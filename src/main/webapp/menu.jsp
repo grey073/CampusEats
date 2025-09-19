@@ -1,171 +1,109 @@
-<%@ page import="java.util.*,com.campuseats.MenuItem" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page import="java.util.*, com.campuseats.MenuItem" %>
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>CampusEats - Menu</title>
-  <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#fff; color:#222; }
-    .hero { padding: 30px 40px; text-align:center; background: #660505; }
-    .hero h1 { margin:0; font-size: 32px; color:#fff; }
-    .hero p { color:#f0f0f0; margin-top:8px; }
+    <title>CampusEats - Menu</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #fff; }
+        h1 { color: maroon; }
+        h2 { color: maroon; text-transform: capitalize; } /* Capitalize category names */
 
-    .container { padding: 20px 40px; }
+        .category { margin-bottom: 40px; }
+        
+        .scroll-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
 
-    .category { margin: 28px 0; }
-    .category-header {
-      display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
-    }
-    .category-header h2 { margin:0; font-size:20px; color:#660505; letter-spacing:0.5px; }
-    .category-header a { color:#660505; text-decoration:none; font-weight:bold; }
+        .scroll-container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar */
+        }
 
-    .row { position: relative; }
-    .track {
-      display:flex; gap: 14px; overflow-x: auto;
-      scroll-behavior: smooth; padding: 8px 4px;
-    }
-    .track::-webkit-scrollbar { height: 6px; }
-    .track::-webkit-scrollbar-thumb { background: #800000; border-radius:4px; }
+        .item {
+            flex: 0 0 auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+            border-radius: 8px;
+            background: #fafafa;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+        }
 
-    .card {
-      min-width: 220px; background: #fafafa; border-radius: 10px;
-      padding: 12px; text-align:center; color: #222;
-      border: 1px solid #ddd; box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-    }
-    .card img { width:100%; height:120px; object-fit:cover; border-radius:6px; margin-bottom:8px; }
-    .card .name { font-weight:600; margin-bottom:6px; color:#333; }
-    .card .price { color:#800000; margin-bottom:8px; font-weight:bold; }
-    .card button {
-      padding:8px 12px; border: none; border-radius:6px; cursor:pointer;
-      background: #800000; color:#fff; font-weight:600;
-      transition: background 0.3s;
-    }
-    .card button:hover { background:#5a0000; }
+        .item img { width: 150px; height: 120px; object-fit: cover; border-radius: 4px; }
+        .item b { display: block; margin-top: 8px; color: maroon; }
 
-    .nav-btn {
-      position:absolute; top:50%; transform: translateY(-50%);
-      width:34px; height:34px; border-radius:50%; border:none;
-      background:#800000; color:#fff; cursor:pointer; z-index:2;
-      font-size:16px; font-weight:bold;
-    }
-    .nav-left { left:-18px; }
-    .nav-right { right:-18px; }
-
-    @media (max-width:700px){
-      .card { min-width:160px; }
-      .nav-left, .nav-right { display:none; }
-    }
-
-    .toast {
-      position: fixed; right: 24px; bottom: 24px;
-      background: #800000; color:#fff;
-      padding:10px 14px; border-radius:8px; display:none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-   }
-  </style>
+        button {
+            background: maroon; 
+            color: white; 
+            padding: 6px 12px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background: darkred; }
+    </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>CampusEats - Menu</h1>
-    <p>Tap items to add to cart. Checkout from Cart.</p>
-  </div>
 
-  <div class="container">
-    <%
-      Map menuByCategory = (Map) request.getAttribute("menuByCategory");
-      if (menuByCategory == null) {
-    %>
-      <p>No menu available.</p>
-    <%
-      } else {
-        for (Object catObj : menuByCategory.keySet()) {
-          String category = (String) catObj;
-          List items = (List) menuByCategory.get(category);
-    %>
-      <div class="category">
-        <div class="category-header">
-          <h2><%= category.substring(0,1).toUpperCase() + category.substring(1).toLowerCase() %></h2>
-          <div><a href="cart.jsp">Cart</a></div>
+<h1>CampusEats Menu</h1>
+<a href="cart.jsp" style="color: maroon; font-weight: bold;">🛒 View Cart</a>
+<hr/>
+
+<%
+    Map<String, List<MenuItem>> menuByCategory = 
+        (Map<String, List<MenuItem>>) request.getAttribute("menuByCategory");
+
+    if (menuByCategory != null) {
+        for (String category : menuByCategory.keySet()) {
+%>
+    <div class="category">
+        <h2><%= category %></h2>
+        <div class="scroll-container">
+        <%
+            for (MenuItem item : menuByCategory.get(category)) {
+        %>
+            <div class="item">
+   <img src="images/menu/<%= item.getImage() %>" alt="<%= item.getName() %>"
+     onerror="this.onerror=null;this.src='images/menu/placeholder.jpg';"/>
+
+    <b><%= item.getName() %></b>
+    <b><%= item.getPrice() %> rs</b>
+    <form action="addToCart" method="post">
+        <input type="hidden" name="id" value="<%= item.getId() %>"/>
+        <input type="hidden" name="name" value="<%= item.getName() %>"/>
+        <input type="hidden" name="price" value="<%= item.getPrice() %>"/>
+        <button type="submit">Add to Cart</button>
+    </form>
+</div>
+
+        <% } %>
         </div>
-
-        <div class="row">
-          <button class="nav-btn nav-left" data-target="track-<%=category.replaceAll("\\s+","-")%>">&#9664;</button>
-          <div id="track-<%=category.replaceAll("\\s+","-")%>" class="track">
-            <%
-              if (items != null) {
-                 for (Object o : items) {
-                    MenuItem m = (MenuItem) o;
-            %>
-              <div class="card">
-                <img src="images/menu/<%= m.getImage() != null ? m.getImage() : "placeholder.jpg" %>" alt="<%= m.getName() %>"/>
-                <div class="name"><%= m.getName() %></div>
-                <div class="price"><%= String.format("%.2f rs", m.getPrice()) %></div>
-                <button onclick="addToCart(<%= m.getId() %>)">Add to Cart</button>
-              </div>
-            <%
-                 }
-              }
-            %>
-          </div>
-          <button class="nav-btn nav-right" data-target="track-<%=category.replaceAll("\\s+","-")%>">&#9654;</button>
-        </div>
-      </div>
-    <%
+    </div>
+<%
         }
-      }
-    %>
-  </div>
-
-  <div class="toast" id="toast">Added to cart</div>
-
-  <script>
-    // slide buttons
-    document.querySelectorAll('.nav-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const id = btn.getAttribute('data-target');
-        const track = document.getElementById(id);
-        const amount = track.clientWidth * 0.6;
-        if (btn.classList.contains('nav-left')) track.scrollBy({left: -amount, behavior:'smooth'});
-        else track.scrollBy({left: amount, behavior:'smooth'});
-      });
-    });
-
-    // auto scrolling
-    document.querySelectorAll('.track').forEach(track => {
-      let direction = 1;
-      let step = track.clientWidth * 0.6;
-      setInterval(() => {
-        if (track.scrollLeft + track.clientWidth >= track.scrollWidth) {
-          direction = -1;
-        } else if (track.scrollLeft <= 0) {
-          direction = 1;
-        }
-        track.scrollBy({ left: step * direction, behavior:'smooth' });
-      }, 4000);
-    });
-
-    // Toast
-    function showToast(msg){
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      setTimeout(()=> t.style.display = 'none', 1500);
     }
+%>
 
-    // Add to cart
-    function addToCart(itemId){
-      fetch('add-to-cart', {
-        method:'POST',
-        headers: {'Content-Type':'application/x-www-form-urlencoded'},
-        body: 'itemId=' + encodeURIComponent(itemId) + '&qty=1'
-      })
-      .then(resp => resp.text())
-      .then(txt => {
-         if (txt.trim() === 'OK') showToast('Added to cart');
-         else showToast('Error');
-      })
-      .catch(err => showToast('Error'));
-    }
-  </script>
+<script>
+    // Auto-scroll effect for each category row
+    document.querySelectorAll('.scroll-container').forEach(container => {
+        let scrollAmount = 0;
+        setInterval(() => {
+            container.scrollBy({ left: 210, behavior: 'smooth' });
+            scrollAmount += 210;
+            if (scrollAmount >= container.scrollWidth - container.clientWidth) {
+                container.scrollTo({ left: 0, behavior: 'smooth' });
+                scrollAmount = 0;
+            }
+        }, 3000); // change every 3 seconds
+    });
+</script>
+
 </body>
-</html> 
+</html>
