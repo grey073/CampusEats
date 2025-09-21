@@ -21,7 +21,15 @@
         .empty-cart { text-align: center; font-size: 1.1em; color: #555; }
         .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: white; background-color: maroon; padding: 8px 15px; border-radius: 6px; transition: 0.3s; }
         .back-link:hover { background-color: darkred; }
+        .payment-box { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .payment-title { font-weight: bold; margin-bottom: 10px; color: maroon; }
+        .action-buttons { text-align:center; margin-top: 20px; }
     </style>
+    <script>
+        function confirmRemove() {
+            return confirm('Are you sure you want to remove this item?');
+        }
+    </script>
 </head>
 <body>
 <div class="container">
@@ -41,7 +49,6 @@
                     cart.add(new CartItem(m.getId(), m.getName(), m.getPrice(), 1));
                 }
             }
-            // overwrite session with proper CartItem list
             session.setAttribute("cart", cart);
         }
 
@@ -52,40 +59,77 @@
         } else {
             double grandTotal = 0;
     %>
-    <form action="cart" method="get">
-        <table>
-            <tr>
-                <th>Item Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-                <th>Actions</th>
-            </tr>
-            <%
-                for (CartItem item : cart) {
-                    double total = item.getTotalPrice();
-                    grandTotal += total;
-            %>
-            <tr>
-                <td><%= item.getName() %></td>
-                <td><%= item.getPrice() %></td>
-                <td>
-                    <input type="number" name="quantity" value="<%= item.getQuantity() %>" min="1"/>
-                </td>
-                <td><%= total %></td>
-                <td>
-                    <button type="submit" name="action" value="update" class="btn btn-update">Update</button>
-                    <button type="submit" name="action" value="remove" class="btn btn-remove">Remove</button>
+   
+    
+
+    <table>
+        <tr>
+            <th>Item Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Actions</th>
+        </tr>
+        <%
+            for (CartItem item : cart) {
+                double total = item.getTotalPrice();
+                grandTotal += total;
+        %>
+        <tr>
+            <td><%= item.getName() %></td>
+            <td><%= String.format("%.2f", item.getPrice()) %></td>
+
+            <!-- Update quantity -->
+            <td>
+                <form action="cart" method="post" style="display:inline-block;">
+                    <input type="hidden" name="action" value="update"/>
                     <input type="hidden" name="id" value="<%= item.getId() %>"/>
-                </td>
-            </tr>
-            <% } %>
-        </table>
-        <div class="grand-total">Grand Total: <%= grandTotal %></div>
+                    <input type="number" name="quantity" value="<%= item.getQuantity() %>" min="1"/>
+                    <button type="submit" class="btn btn-update">Update</button>
+                </form>
+            </td>
+
+            <td><%= String.format("%.2f", total) %></td>
+
+            <!-- Remove item -->
+            <td>
+                <form action="cart" method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="id" value="<%= item.getId() %>">
+                    <button type="submit" class="btn btn-remove" onclick="return confirmRemove();">Remove</button>
+                </form>
+            </td>
+        </tr>
+        <% } %>
+    </table>
+
+    <div class="grand-total">Grand Total: <%= String.format("%.2f", grandTotal) %></div>
+
+    <!-- Payment & Place Order -->
+     <div class="payment-box">
+    <form action="PaymentDemoServlet" method="post">
+        <div>
+            <label>
+                <input type="radio" name="paymentMethod" value="Cash" required> Cash on Delivery
+            </label><br>
+            <label>
+                <input type="radio" name="paymentMethod" value="UPI"> UPI
+            </label><br>
+            <label>
+                <input type="radio" name="paymentMethod" value="Card"> Card
+            </label>
+        </div>
+        <input type="hidden" name="amount" value="<%= grandTotal %>">
+        <div style="margin-top:15px;">
+            <button type="submit" class="btn btn-update">Place Order</button>
+        </div>
     </form>
+</div>
+       
+
     <% } %>
 
-    <div style="text-align:center;">
+    <div class="action-buttons">
         <a href="menu" class="back-link">Back to Menu</a>
     </div>
 </div>

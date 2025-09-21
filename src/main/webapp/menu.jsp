@@ -15,7 +15,7 @@
             display: flex;
             overflow-x: auto;
             scroll-behavior: smooth;
-            gap: 15px;
+            gap: 30px;
             padding-bottom: 10px;
         }
 
@@ -104,6 +104,7 @@
         }, 3000); // change every 3 seconds
     });
 </script>
+
 
 </body>
 </html>
