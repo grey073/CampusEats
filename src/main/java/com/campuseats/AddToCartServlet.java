@@ -15,8 +15,7 @@ public class AddToCartServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
-
-        List<MenuItem> cart = (List<MenuItem>) session.getAttribute("cart");
+        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
         if (cart == null) {
             cart = new ArrayList<>();
         }
@@ -24,14 +23,18 @@ public class AddToCartServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
         double price = Double.parseDouble(request.getParameter("price"));
-        String image = request.getParameter("image");
-
-        MenuItem item = new MenuItem(id, name, "Cart", price, image);
-
-        cart.add(item);
+        int quantity = 1; // default 1 item
+        CartItem found = null;
+        for (CartItem item : cart) {
+            if (item.getId() == id) { found = item; break; }
+        }
+        if (found != null) {
+            found.setQuantity(found.getQuantity() + 1);
+        } else {
+            cart.add(new CartItem(id, name, price, quantity));
+        }
 
         session.setAttribute("cart", cart);
-
         response.sendRedirect("cart.jsp");
     }
 }

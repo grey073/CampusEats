@@ -15,31 +15,32 @@ public class MenuServlet extends HttpServlet {
             throws ServletException, IOException {
 
         Map<String, List<MenuItem>> menuByCategory = new LinkedHashMap<>();
+        String[] categories = {"breakfast", "lunch", "dinner", "snacks", "juices"};
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection con = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/campuseats", "root", "password");
-
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery(
-                "SELECT * FROM menu WHERE availability=1 ORDER BY category");
-
-            while (rs.next()) {
-                MenuItem item = new MenuItem(
-                    rs.getInt("id"),
-                    rs.getString("item_name"),
-                    rs.getString("category"),
-                    rs.getDouble("price"),
-                    rs.getString("images")
-                );
-
-                menuByCategory.computeIfAbsent(item.getCategory(), k -> new ArrayList<>()).add(item);
+        try (Connection con = DBConnection.getConnection()) {
+            for (String category : categories) {
+                List<MenuItem> list = new ArrayList<>();
+                PreparedStatement pst = con.prepareStatement(
+                        "SELECT * FROM menu WHERE category=? AND availability=1");
+                pst.setString(1, category);
+                ResultSet rs = pst.executeQuery();
+                while (rs.next()) {
+                    list.add(new MenuItem(
+                            rs.getInt("id"),
+                            rs.getString("item_name"),
+                            rs.getString("category"),
+                            rs.getDouble("price"),
+                            rs.getBoolean("availability"),
+                            rs.getString("images")
+                    ));
+                }
+                if (!list.isEmpty()) {
+                    menuByCategory.put(category, list);
+                }
+                rs.close();
+                pst.close();
             }
-
-            con.close();
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 

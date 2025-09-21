@@ -1,26 +1,28 @@
 package com.campuseats;
 
 public class MenuItem {
-
     private int id;
-    private String name;
+    private String itemName;
     private String category;
     private double price;
-    private String image;
+    private boolean availability;
+    private String images;
 
-    // Constructor
-    public MenuItem(int id, String name, String category, double price, String image) {
+    public MenuItem(int id, String itemName, String category, double price, boolean availability, String images) {
         this.id = id;
-        this.name = name;
+        this.itemName = itemName;
         this.category = category;
         this.price = price;
-        this.image = image;
+        this.availability = availability;
+        this.images = images;
     }
 
-    // Getters
     public int getId() { return id; }
-    public String getName() { return name; }
+    public String getItemName() { return itemName; }
     public String getCategory() { return category; }
     public double getPrice() { return price; }
-    public String getImage() { return image; }
+    public boolean isAvailable() { return availability; }
+    public String getImages() { return images; }
+
+    public void setAvailable(boolean availability) { this.availability = availability; }
 }

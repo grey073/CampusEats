@@ -22,84 +22,57 @@ public class CartServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) action = "add";
 
-        switch (action) {
-            case "add":
-                addItem(request, cart, session);
+        try {
+            if (action.startsWith("update_")) {
+                // Extract item ID from action
+                int id = Integer.parseInt(action.split("_")[1]);
+                // Get quantity input value
+                String qtyStr = request.getParameter("quantity_" + id);
+                int quantity = Integer.parseInt(qtyStr);
+
+                for (CartItem item : cart) {
+                    if (item.getId() == id) {
+                        item.setQuantity(quantity);
+                        break;
+                    }
+                }
+            } else if (action.startsWith("remove_")) {
+                int id = Integer.parseInt(action.split("_")[1]);
+                cart.removeIf(item -> item.getId() == id);
+            } else if (action.equals("pay")) {
+                // Payment method
+                String paymentMethod = request.getParameter("paymentMethod");
+                session.setAttribute("lastPaymentStatus", paymentMethod.equals("COD") ? "Pending" : "Paid");
+
+                double totalAmount = cart.stream().mapToDouble(CartItem::getTotalPrice).sum();
+                session.setAttribute("lastOrderTotal", totalAmount);
+                session.setAttribute("lastOrderId", System.currentTimeMillis()); // demo order ID
+
+                cart.clear();
+                response.sendRedirect("paymentSuccess.jsp");
                 session.setAttribute("cart", cart);
-                response.sendRedirect("menu.jsp?added=success");
                 return;
+            } else if (action.equals("add")) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                String name = request.getParameter("name");
+                double price = Double.parseDouble(request.getParameter("price"));
 
-            case "update":
-                updateItem(request, cart);
-                break;
-
-            case "remove":
-                removeItem(request, cart);
-                break;
-
-            default:
-                break;
+                boolean found = false;
+                for (CartItem item : cart) {
+                    if (item.getId() == id) {
+                        item.setQuantity(item.getQuantity() + 1);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) cart.add(new CartItem(id, name, price, 1));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         session.setAttribute("cart", cart);
         response.sendRedirect("cart.jsp");
-    }
-
-    private void addItem(HttpServletRequest request, List<CartItem> cart, HttpSession session) {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-
-            List<MenuItem> menu = (List<MenuItem>) session.getAttribute("menu");
-            double price = 0;
-            String name = "";
-            if (menu != null) {
-                for (MenuItem m : menu) {
-                    if (m.getId() == id) {
-                        price = m.getPrice();
-                        name = m.getName();
-                        break;
-                    }
-                }
-            }
-
-            boolean found = false;
-            for (CartItem item : cart) {
-                if (item.getId() == id) {
-                    item.setQuantity(item.getQuantity() + 1);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) cart.add(new CartItem(id, name, price, 1));
-
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void updateItem(HttpServletRequest request, List<CartItem> cart) {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-
-            for (CartItem item : cart) {
-                if (item.getId() == id) {
-                    item.setQuantity(quantity);
-                    break;
-                }
-            }
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void removeItem(HttpServletRequest request, List<CartItem> cart) {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            cart.removeIf(item -> item.getId() == id);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

@@ -1,52 +1,60 @@
-<%@ page import="java.sql.*" %>
-<%
-    int userId = 1; // TODO: replace with logged-in user
-    Connection conn = null;
-    Statement stmt = null;
-    ResultSet rs = null;
-%>
+<%@ page import="java.util.*, com.campuseats.Order, com.campuseats.OrderItem" %>
+<%@ page session="true" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Orders</title>
+    <title>My Orders - CampusEats</title>
     <style>
-        body { font-family: Arial; margin:20px; }
-        table { width: 80%; border-collapse: collapse; }
-        th, td { border:1px solid #ddd; padding:10px; text-align:center; }
-        th { background: maroon; color:white; }
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        .container { width: 80%; margin: 40px auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        h1 { background: maroon; color: white; text-align: center; padding: 15px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th, td { padding: 8px; text-align: center; border-bottom: 1px solid #ddd; }
+        th { background-color: maroon; color: white; }
+        td.status-paid { color: green; font-weight: bold; }
+        td.status-pending { color: orange; font-weight: bold; }
+        .empty { text-align: center; font-size: 1.1em; color: #555; margin-top: 20px; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: white; background-color: maroon; padding: 8px 15px; border-radius: 6px; transition: 0.3s; }
+        .back-link:hover { background-color: darkred; }
     </style>
 </head>
 <body>
+<div class="container">
     <h1>My Orders</h1>
-    <table>
-        <tr>
-            <th>Order ID</th><th>Total Amount</th><th>Payment Method</th><th>Status</th><th>Date</th>
-        </tr>
-        <%
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/campuseats", "root", "password");
-                stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT * FROM orders WHERE user_id=" + userId + " ORDER BY order_date DESC");
 
-                while (rs.next()) {
-        %>
-        <tr>
-            <td><%= rs.getInt("order_id") %></td>
-            <td>₹<%= rs.getDouble("total_amount") %></td>
-            <td><%= rs.getString("payment_method") %></td>
-            <td><%= rs.getString("status") %></td>
-            <td><%= rs.getTimestamp("order_date") %></td>
-        </tr>
-        <%      }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try { if (rs != null) rs.close(); } catch (Exception ignored) {}
-                try { if (stmt != null) stmt.close(); } catch (Exception ignored) {}
-                try { if (conn != null) conn.close(); } catch (Exception ignored) {}
-            }
-        %>
-    </table>
+    <%
+        List<Order> orders = (List<Order>) request.getAttribute("orders");
+        if (orders != null && !orders.isEmpty()) {
+    %>
+        <table>
+            <tr>
+                <th>Order ID</th>
+                <th>Item Name</th>
+                <th>Total Amount Rs</th>
+                <th>Payment Status</th>
+                <th>Order Status</th>
+                <th>Order Date</th>
+            </tr>
+            <% for (Order o : orders) { 
+                   for (OrderItem item : o.getItems()) {
+            %>
+            <tr>
+                <td><%= o.getOrderId() %></td>
+                <td><%= item.getName() %></td>
+                <td><%= o.getTotalAmount() %></td>
+                <td class="status-<%= o.getPaymentStatus().toLowerCase() %>"><%= o.getPaymentStatus() %></td>
+                <td><%= o.getOrderStatus() %></td>
+                <td><%= o.getOrderDate() %></td>
+            </tr>
+            <% } } %>
+        </table>
+    <% } else { %>
+        <p class="empty">You have no orders yet.</p>
+    <% } %>
+
+    <div style="text-align:center;">
+        <a href="menu" class="back-link">Back to Menu</a>
+    </div>
+</div>
 </body>
 </html>

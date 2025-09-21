@@ -1,35 +1,54 @@
 package com.campuseats;
 
 import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.ServletException;
+import javax.servlet.*;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 
 @WebServlet("/order")
 public class OrderServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+        HttpSession session = request.getSession();
+        Integer userId = (Integer) session.getAttribute("userId");
 
-        if (cart == null || cart.isEmpty()) {
-            response.sendRedirect("cart.jsp?error=empty");
+        if (userId == null) {
+            response.sendRedirect("index.jsp?error=login");
             return;
         }
 
-        // TODO: Save order to database if needed
-        // Example: insert order + items into orders table
+        List<Order> orders = new ArrayList<>();
 
-        // Forward to order summary page
-        request.setAttribute("cart", cart);
-        request.getRequestDispatcher("orderSummary.jsp").forward(request, response);
+        try (Connection con = DBConnection.getConnection()) {
+            String query = "SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC";
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setInt(1, userId);
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                Order order = new Order(
+                    rs.getInt("order_id"),
+                    rs.getInt("user_id"),
+                    rs.getDouble("total_amount"),
+                    rs.getString("payment_status"),
+                    rs.getTimestamp("order_date")
+                );
+                orders.add(order);
+            }
+
+            request.setAttribute("orders", orders);
+            RequestDispatcher rd = request.getRequestDispatcher("orders.jsp");
+            rd.forward(request, response);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.getWriter().println("Database error: " + e.getMessage());
+        }
     }
 }
