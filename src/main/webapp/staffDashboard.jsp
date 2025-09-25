@@ -31,6 +31,11 @@ if (role == null || (!role.equals("staff") && !role.equals("admin"))) {
     <h1 class="block-heading">Staff Dashboard</h1>
 <a href="index.jsp" class="cart-link">Logout</a>
     <div class="dashboard-options">
+     <div class="card">
+            <h2>Notifications</h2>
+            <p>Check new order notifications</p>
+            <div id="notifications">No new orders</div>
+        </div>
         <div class="card">
             <h2>Manage Orders</h2>
             <p>View all orders and update order status</p>
@@ -41,11 +46,7 @@ if (role == null || (!role.equals("staff") && !role.equals("admin"))) {
             <p>Mark items as unavailable or available</p>
             <a href="manageItemsServlet">Go</a>
         </div>
-        <div class="card">
-            <h2>Notifications</h2>
-            <p>Check new order notifications</p>
-            <div id="notifications">No new orders</div>
-        </div>
+       
     </div>
 </div>
 

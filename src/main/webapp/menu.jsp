@@ -63,8 +63,8 @@ if (menuByCategory != null) {
 document.querySelectorAll('.scroll-container').forEach(container => {
     let scrollAmount = 0;
     setInterval(() => {
-        container.scrollBy({ left: 210, behavior: 'smooth' });
-        scrollAmount += 210;
+        container.scrollBy({ left: 240, behavior: 'smooth' });
+        scrollAmount += 220;
         if (scrollAmount >= container.scrollWidth - container.clientWidth) {
             container.scrollTo({ left: 0, behavior: 'smooth' });
             scrollAmount = 0;
